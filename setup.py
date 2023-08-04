@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="StockClients",
-    version="0.54",
+    version="0.55",
     description="Python modules to scrape stock data from various sources",
     author="Nate",
     python_requires='>=3.10',
@@ -14,5 +14,6 @@ setup(
         "bs4",
         "duckdb",
         "python-dotenv",
+        "requests",
     ],
 )
