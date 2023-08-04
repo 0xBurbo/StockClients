@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 from bs4 import BeautifulSoup
 import urllib
 import csv
-from stock_screener_query import write_query
+from .stock_screener_query import write_query
 from util import create_multipart_formdata
 
 

@@ -1,5 +1,5 @@
-from earnings_releases import EarningsReleaseScraper
-from scraper import ZacksScraper
+from .earnings_releases import EarningsReleaseScraper
+from .scraper import ZacksScraper
 import warnings
 from urllib3.exceptions import InsecureRequestWarning
 import datetime
