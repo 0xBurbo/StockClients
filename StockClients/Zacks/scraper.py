@@ -1,8 +1,8 @@
 import requests
-from stock_screener import StockScreener
+from .stock_screener import StockScreener
+from .earnings_releases import EarningsReleaseScraper
 from typing import Any, Dict, List
 from datetime import datetime
-from earnings_releases import EarningsReleaseScraper
 
 
 class ZacksScraper:
