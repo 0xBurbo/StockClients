@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="StockClients",
-    version="0.3",
+    version="0.4",
     description="Python modules to scrape stock data from various sources",
     author="Nate",
     packages=find_packages(exclude=["tests", "tests.*"]),
