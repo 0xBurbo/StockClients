@@ -90,51 +90,71 @@ class EarningsReleaseScraper:
 
         return response.text
 
+    def remove_last_bracket(self, s: str):
+        index = s.rfind("}")
+        # If '}' was found, remove it
+        if index != -1:
+            s = s[:index] + s[index + 1 :]
+        return s
+
     def parse_response(self, response: str):
         # Extract JSON data from JavaScript request body
         body = response.split('"data"  : ', 1)[1]
-        body = body.split("            }", 1)[0]
+        body = self.remove_last_bracket(body)
+        body = body.strip()
         data = json.loads(body)
 
         # Parse data into a Pandas DataFrame
-        df = pd.DataFrame()
+        df = pd.DataFrame(columns=["ticker", "report_time", "estimate", "reported"])
 
         for row in data:
-            parsedData = {}
-            for key in row:
-                value = row[key]
-
-                # Zacks data comes wrapped in HTML tags
-                # Use BeautifulSoup parse the tags and remove them
-                match key:
-                    case "ticker":
-                        soup = BeautifulSoup(value, "html.parser")
-                        texts = soup.findAll(text=True, recursive=True)
-                        ticker = texts[1]
-                        parsedData["ticker"] = ticker
-                    # case "company_name":
-                    #     soup = BeautifulSoup(value, "html.parser")
-                    #     texts = soup.findAll(text=True, recursive=True)
-                    #     company_name = texts[0]
-                    #     parsedData['cname'] = company_name
-                    case "report_time":
-                        dt = datetime.datetime.strptime(value, "%H:%M")
-                        parsedData["report_time"] = dt.time()
-                    case "estimate":
-                        parsedData["estimate"] = value
-                    case "reported":
-                        parsedData["reported"] = value
-                    # case "surprise":
-                    #     soup = BeautifulSoup(value, "html.parser")
-                    #     texts = soup.findAll(text=True, recursive=True)
-                    #     parsedData['surprise'] = texts[0]
-                    # case "perc_change":
-                    #     soup = BeautifulSoup(value, "html.parser")
-                    #     texts = soup.findAll(text=True, recursive=True)
-                    #     parsedData['percent_change'] = texts[0]
-
-            newRow = pd.Series(data=parsedData)
-            newRow = newRow.to_frame().transpose()
-            df = pd.concat([df, newRow], ignore_index=True)
+            try:
+                newRow = self.parseRow(row)
+                df = pd.concat([df, newRow], ignore_index=True)
+            except Exception as e:
+                print(f"Error parsing row: {row}")
+                print(e)
 
         return df
+
+    def parseRow(self, row):
+        parsedData = {}
+        for key in row:
+            value = row[key]
+
+            # Zacks data comes wrapped in HTML tags
+            # Use BeautifulSoup parse the tags and remove them
+            match key:
+                case "ticker":
+                    soup = BeautifulSoup(value, "html.parser")
+                    texts = soup.findAll(text=True, recursive=True)
+                    ticker = texts[1]
+                    parsedData["ticker"] = ticker
+                # case "company_name":
+                #     soup = BeautifulSoup(value, "html.parser")
+                #     texts = soup.findAll(text=True, recursive=True)
+                #     company_name = texts[0]
+                #     parsedData['cname'] = company_name
+                case "report_time":
+                    try:
+                        dt = datetime.datetime.strptime(value, "%H:%M")
+                        parsedData["report_time"] = dt.time()
+                    except ValueError:
+                        print(f"Error parsing report_time: {value}")
+                        parsedData["report_time"] = None
+                case "estimate":
+                    parsedData["estimate"] = value
+                case "reported":
+                    parsedData["reported"] = value
+                # case "surprise":
+                #     soup = BeautifulSoup(value, "html.parser")
+                #     texts = soup.findAll(text=True, recursive=True)
+                #     parsedData['surprise'] = texts[0]
+                # case "perc_change":
+                #     soup = BeautifulSoup(value, "html.parser")
+                #     texts = soup.findAll(text=True, recursive=True)
+                #     parsedData['percent_change'] = texts[0]
+
+        newRow = pd.Series(data=parsedData)
+        newRow = newRow.to_frame().transpose()
+        return newRow
