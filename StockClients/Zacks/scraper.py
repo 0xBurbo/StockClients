@@ -1,12 +1,25 @@
 import requests
 from .stock_screener import StockScreener
 from .earnings_releases import EarningsReleaseScraper
+from .earnings_calendar import EarningsCalendarScraper, EarningsCalendarTab
 from typing import Any, Dict, List
 from datetime import datetime
 
+# Charles proxy config
+default_proxies = {
+    "http": "http://localhost:8888",
+    "https": "http://localhost:8888",
+}
+
 
 class ZacksScraper:
-    def __init__(self, username, password, use_proxy=False):
+    def __init__(
+        self,
+        username,
+        password,
+        use_proxy=False,
+        proxies: dict[str, str] = default_proxies,
+    ):
         self.username = username
         self.password = password
         self.logged_in = False
@@ -15,10 +28,7 @@ class ZacksScraper:
 
         # Optional Charles proxy for debugging
         if use_proxy:
-            self.session.proxies = {
-                "http": "http://localhost:8888",
-                "https": "http://localhost:8888",
-            }
+            self.session.proxies = proxies
             self.session.verify = False
 
         self.session.headers.update(
@@ -62,3 +72,9 @@ class ZacksScraper:
 
         earnings_release = EarningsReleaseScraper(self.session)
         return earnings_release.scrape(timestamp)
+
+    def scrape_earnings_calendar(self, tab: EarningsCalendarTab, dt: datetime):
+        self.login()
+
+        earnings_calendar = EarningsCalendarScraper(self.session)
+        return earnings_calendar.scrape(tab, dt)
