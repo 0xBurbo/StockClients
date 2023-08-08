@@ -7,6 +7,23 @@ from bs4 import BeautifulSoup
 
 
 class EarningsCalendarTab(Enum):
+    def __str__(self):
+        match self.value:
+            case 1:
+                return "earnings"
+            case 9:
+                return "sales"
+            case 6:
+                return "guidance"
+            case 3:
+                return "revisions"
+            case 5:
+                return "dividends"
+            case 4:
+                return "splits"
+            case 8:
+                return "transcripts"
+
     EARNINGS = 1
     SALES = 9
     GUIDANCE = 6
@@ -22,6 +39,7 @@ class EarningsCalendarScraper:
 
     def scrape(self, tab: EarningsCalendarTab, dt: datetime):
         response = self.fetch_tab(tab, dt)
+
         df = self.parse_tab(response, tab)
         return df
 
@@ -33,6 +51,11 @@ class EarningsCalendarScraper:
         url += f"&_={int(datetime.now().timestamp())}"
 
         response = self.session.get(url)
+        if not response.ok:
+            raise Exception(
+                f"Error fetching tab {tab} for date {dt.ctime()}: status code {response.status_code}"
+            )
+
         return response.text
 
     def remove_last_bracket(self, s: str):
@@ -313,7 +336,6 @@ class EarningsCalendarScraper:
         parsedData["mcap"] = row[2]
         parsedData["price"] = row[3]
         parsedData["split_factor"] = row[4]
-
 
         newRow = pd.Series(data=parsedData)
         newRow = newRow.to_frame().transpose()
